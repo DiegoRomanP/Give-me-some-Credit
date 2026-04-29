@@ -68,7 +68,12 @@ Este proyecto utiliza [**uv**](https://docs.astral.sh/uv/) como gestor de paquet
 - **Python 3.14+** instalado en tu sistema.
 - **uv** instalado globalmente:
   ```bash
+  # forma general
   pip install uv
+  # forma recomendada para linux o macOs
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  # forma recomendada para windows
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
   ```
 
 ### Instalación
@@ -127,7 +132,7 @@ Este proyecto utiliza [**uv**](https://docs.astral.sh/uv/) como gestor de paquet
 Los boxplots revelan la presencia de **outliers extremos** en múltiples variables del dataset original:
 
 <p align="center">
-  <img src="images_result/datos_box_plot.png" alt="Boxplots antes de la limpieza" width="90%">
+  <img src="images/datos_box_plot.png" alt="Boxplots antes de la limpieza" width="90%">
 </p>
 
 **Hallazgos principales:**
