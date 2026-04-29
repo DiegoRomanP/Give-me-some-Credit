@@ -1,0 +1,18 @@
+[project]
+name = "give-me-some-credit"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "imbalanced-learn>=0.14.1",
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.9",
+    "numpy>=2.4.4",
+    "optuna>=4.8.0",
+    "pandas>=3.0.2",
+    "scikit-learn>=1.8.0",
+    "seaborn>=0.13.2",
+    "shap>=0.51.0",
+    "xgboost>=3.2.0",
+]
