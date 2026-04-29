@@ -39,7 +39,7 @@ En el sector financiero, un modelo de *scoring* preciso tiene un impacto directo
 ```
 Give-Me-Some-Credit/
 ├── data/                              # Datasets (train.csv, test.csv)
-├── images_result/                     # Visualizaciones generadas
+├── images/                     # Visualizaciones generadas
 │   ├── datos_box_plot.png             # Boxplots antes de limpieza
 │   ├── datos_box_plot_after_cleaning.png  # Boxplots después de limpieza
 │   ├── datos_histograma.png           # Histogramas originales
@@ -138,7 +138,7 @@ Los boxplots revelan la presencia de **outliers extremos** en múltiples variabl
 ### Distribución de Variables — Histogramas
 
 <p align="center">
-  <img src="images_result/datos_histograma.png" alt="Histogramas originales" width="90%">
+  <img src="images/datos_histograma.png" alt="Histogramas originales" width="90%">
 </p>
 
 Los histogramas confirman el **sesgo extremo** en las variables financieras, lo que justifica la aplicación de transformaciones logarítmicas.
@@ -148,7 +148,7 @@ Los histogramas confirman el **sesgo extremo** en las variables financieras, lo 
 Tras aplicar `log1p` a las variables sesgadas:
 
 <p align="center">
-  <img src="images_result/datos_histograma_norm.png" alt="Histogramas normalizados" width="90%">
+  <img src="images/datos_histograma_norm.png" alt="Histogramas normalizados" width="90%">
 </p>
 
 ### Datos Después de la Limpieza
@@ -156,11 +156,11 @@ Tras aplicar `log1p` a las variables sesgadas:
 Boxplots y distribuciones tras el preprocesamiento completo (capping, imputación MICE, transformaciones):
 
 <p align="center">
-  <img src="images_result/datos_box_plot_after_cleaning.png" alt="Boxplots después de limpieza" width="90%">
+  <img src="images/datos_box_plot_after_cleaning.png" alt="Boxplots después de limpieza" width="90%">
 </p>
 
 <p align="center">
-  <img src="images_result/datos_histograma_plot_after_cleaning.png" alt="Histogramas post-limpieza" width="90%">
+  <img src="images/datos_histograma_plot_after_cleaning.png" alt="Histogramas post-limpieza" width="90%">
 </p>
 
 > Los outliers extremos fueron controlados y las distribuciones se normalizaron significativamente.
@@ -222,7 +222,7 @@ Genera muestras sintéticas de la clase minoritaria antes del entrenamiento.
 ### Comparativa Visual — Curva ROC
 
 <p align="center">
-  <img src="images_result/Comparativa_curva_roc.png" alt="Comparativa Curva ROC" width="70%">
+  <img src="images/Comparativa_curva_roc.png" alt="Comparativa Curva ROC" width="70%">
 </p>
 
 La curva ROC demuestra que el modelo con **pesos algorítmicos** domina al modelo con SMOTE en **todos los umbrales de clasificación**.
@@ -275,4 +275,16 @@ El **XGBoost con Pesos Algorítmicos**, optimizado con Optuna, es el modelo sele
 
 ---
 
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE](LICENSE) para detalles.
+
+---
+
 *Proyecto desarrollado con enfoque de Data Analytics, priorizando reproducibilidad, interpretabilidad y rigor estadístico.*
+
+---
+
+<p align="center">
+  Hecho con ❤️ por <a href="https://github.com/DiegoRomanP">Diego Román</a>
+</p>
