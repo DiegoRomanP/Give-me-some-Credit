@@ -1,0 +1,24 @@
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Entornos virtuales
+env/
+venv/
+.venv/
+pip-log.txt
+
+# Git
+.git/
+.github/
+.gitignore
+
+# Entornos de Data Science
+.ipynb_checkpoints/
+*.ipynb
+
+# Datos locales (¡Crítico para mantener la imagen ligera!)
+data/

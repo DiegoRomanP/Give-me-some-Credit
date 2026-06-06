@@ -4,16 +4,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import os
+
 # Descargar la versión más reciente del dataset
 path = kagglehub.competition_download('give-me-some-credit')
-
 print("Path to competition files:", path)
 
-# ubicacion de los datos
-path_train = "data/train.csv"
-path_test = "data/test.csv"
+# Asegurar que existe la carpeta para guardar los resultados limpios
+os.makedirs('data', exist_ok=True)
 
-# cargamos los datos
+# Ubicación de los datos descargados por kagglehub
+path_train = os.path.join(path, "train.csv")
+path_test = os.path.join(path, "test.csv")
+
+# Cargamos los datos
 df_train = pd.read_csv(path_train)
 df_test = pd.read_csv(path_test)
 
@@ -124,53 +128,138 @@ for col in columnas_log:
 #creacion del flag MonthlyIncome_Missing
 df_train_clean['MonthlyIncome_Missing'] = df_train_clean['MonthlyIncome'].apply(lambda x: 1 if pd.isna(x) else 0)
 
-# Aplicacion de Inputacion Multivariada(MICE por su siglas en ingles)
+# ── GUARDAR DATOS PRE-IMPUTACIÓN (con NaNs) ──
+# train.py usará este archivo para validación cruzada, ajustando el imputer POR
+# PLIEGUE (fold) y evitando así la fuga de datos entre pliegues de entrenamiento
+# y validación. La imputación sobre el 100% del train solo se usa para el modelo
+# final y para exportar el artefacto de producción.
+df_train_clean.to_csv('data/train_pre_impute.csv', index=False)
+print("📁 Datos pre-imputación guardados: 'data/train_pre_impute.csv'")
+
+# Aplicacion de Inputacion Multivariada (MICE por sus siglas en inglés)
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.ensemble import RandomForestRegressor
 
-# 1. Seleccionar las columnas involucradas en la imputación
+# Columnas involucradas en la imputación (orden fijo: [0]=MonthlyIncome, [3]=NumberOfDependents)
 cols_impute = ['MonthlyIncome', 'age', 'DebtRatio', 'NumberOfDependents']
-df_subset = df_train_clean[cols_impute].copy()
 
-# 2. Convertir a float64 y pasar <NA> (pandas) a np.nan (numpy/sklearn)
-# IterativeImputer requiere matrices numéricas sin el tipo nullable de pandas
-df_subset = df_subset.astype('float64')
+# Convertir a float64: IterativeImputer requiere matrices numéricas sin el tipo nullable de pandas
+df_subset_train = df_train_clean[cols_impute].astype('float64')
 
-# 3. Configurar MICE con un estimador robusto para datos tabulares
+# Configurar MICE con un estimador robusto para datos tabulares
 imputer = IterativeImputer(
     estimator=RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42),
-    max_iter=10,          # Número de rondas de imputación (10 suele ser suficiente)
-    random_state=42,      # Reproducibilidad
+    max_iter=10,            # Número de rondas de imputación (10 suele ser suficiente)
+    random_state=42,        # Reproducibilidad
     sample_posterior=False, # False = imputación determinista (recomendado para ML)
-    skip_complete=True    # Ignora filas sin nulos para acelerar
+    skip_complete=True      # Ignora filas sin nulos para acelerar
 )
 
-# 4. Ajustar y transformar
-imputed_array = imputer.fit_transform(df_subset)
+# ── TRAIN: .fit() aprende las distribuciones SOLO del conjunto de entrenamiento ──
+# Nunca usar fit_transform sobre el test; hacerlo filtra estadística del test al modelo.
+imputer.fit(df_subset_train)
+imputed_train = imputer.transform(df_subset_train)
 
-# 5. Reemplazar SOLO MonthlyIncome en el DataFrame original
-df_train_clean['MonthlyIncome'] = imputed_array[:, 0]
-
-# Verificación rápida
-print("Nulos en MonthlyIncome después de imputar:", df_train_clean['MonthlyIncome'].isna().sum())
-print("Rango de valores imputados:", df_train_clean['MonthlyIncome'].describe())
-
-
-# 1. Seleccionar las columnas involucradas en la imputación
-cols_impute = ['NumberOfDependents', 'age', 'DebtRatio', 'NumberOfDependents']
-df_subset = df_train_clean[cols_impute].copy()
-
-# 2. Convertir a float64 y pasar <NA> (pandas) a np.nan (numpy/sklearn)
-# IterativeImputer requiere matrices numéricas sin el tipo nullable de pandas
-df_subset = df_subset.astype('float64')
-
-# 3. Ajustar y transformar
-imputed_array = imputer.fit_transform(df_subset)
-
-# 4. Reemplazar SOLO NumberOfDependents en el DataFrame original
-df_train_clean['NumberOfDependents'] = imputed_array[:, 0]
+# Devolver MonthlyIncome (col 0) y NumberOfDependents (col 3) al DataFrame de entrenamiento
+df_train_clean['MonthlyIncome']      = imputed_train[:, 0]
+df_train_clean['NumberOfDependents'] = imputed_train[:, 3]
 
 # Verificación rápida
+print("Nulos en MonthlyIncome después de imputar:",      df_train_clean['MonthlyIncome'].isna().sum())
+print("Rango de MonthlyIncome imputado:",                df_train_clean['MonthlyIncome'].describe())
 print("Nulos en NumberOfDependents después de imputar:", df_train_clean['NumberOfDependents'].isna().sum())
-print("Rango de valores imputados:", df_train_clean['NumberOfDependents'].describe())
+print("Rango de NumberOfDependents imputado:",           df_train_clean['NumberOfDependents'].describe())
+
+
+def limpiar_dataset_financiero(df, fitted_imputer, mediana_edad_train=None):
+    """
+    Replica las transformaciones exactas del conjunto de entrenamiento sobre un nuevo dataset.
+
+    Parámetros
+    ----------
+    df                : DataFrame de entrada (test / datos de producción desde Streamlit).
+    fitted_imputer    : Objeto IterativeImputer ya ajustado sobre el train. Se usa SOLO
+                        .transform() para evitar filtración de información estadística.
+    mediana_edad_train: Mediana de edad calculada sobre el train. Si es None, se calcula
+                        sobre df (solo válido en desarrollo, nunca en producción).
+    """
+    df_clean = df.copy()
+    
+    # 1. Tratar Edad (usamos la mediana del TRAIN para evitar Data Leakage)
+    if mediana_edad_train is None:
+        mediana_edad_train = df_clean.loc[df_clean['age'] > 0, 'age'].median()
+    df_clean.loc[df_clean['age'] == 0, 'age'] = mediana_edad_train
+    
+    # 2. Tratar Códigos de Error
+    columnas_retrasos = [
+        'NumberOfTime30-59DaysPastDueNotWorse',
+        'NumberOfTime60-89DaysPastDueNotWorse',
+        'NumberOfTimes90DaysLate'
+    ]
+    for col in columnas_retrasos:
+        df_clean.loc[df_clean[col] > 90, col] = np.nan
+        
+    # 3. Transformaciones Logarítmicas
+    columnas_log = ['MonthlyIncome', 'DebtRatio', 'RevolvingUtilizationOfUnsecuredLines']
+    for col in columnas_log:
+        df_clean[col] = np.log1p(df_clean[col])
+        
+    df_clean['MonthlyIncome_Missing'] = df_clean['MonthlyIncome'].apply(lambda x: 1 if pd.isna(x) else 0)
+
+    # 4. Imputación: solo .transform() con el imputer ajustado en el train
+    #    El orden de columnas debe coincidir exactamente con el usado en .fit()
+    cols_impute = ['MonthlyIncome', 'age', 'DebtRatio', 'NumberOfDependents']
+    df_subset = df_clean[cols_impute].astype('float64')
+    imputed_array = fitted_imputer.transform(df_subset)
+
+    df_clean['MonthlyIncome']      = imputed_array[:, 0]
+    df_clean['NumberOfDependents'] = imputed_array[:, 3]
+    
+    return df_clean
+
+import joblib
+import os
+
+# Mediana de edad calculada SOLO sobre el train (sin tocar el test)
+mediana_edad_referencia = df_train_clean.loc[df_train_clean['age'] > 0, 'age'].median()
+
+# ── TEST: usamos el imputer ya entrenado (.transform únicamente) ──
+df_test_clean = limpiar_dataset_financiero(
+    df_test,
+    fitted_imputer=imputer,
+    mediana_edad_train=mediana_edad_referencia
+)
+
+# ── EXPORTAR ARTEFACTO DE PREPROCESAMIENTO ──
+# El contenedor backend (y el frontend Streamlit) cargarán este .pkl para
+# preparar los datos de usuarios finales con las mismas distribuciones del train.
+os.makedirs('models', exist_ok=True)
+
+preprocessor_artifact = {
+    'imputer': imputer,                         # IterativeImputer ajustado sobre el train
+    'mediana_edad_referencia': mediana_edad_referencia,  # Mediana de edad del train
+    'cols_impute': ['MonthlyIncome', 'age', 'DebtRatio', 'NumberOfDependents'],  # Orden fijo de columnas
+    # ── GESTIÓN DEL ESPACIO LOGARÍTMICO ──
+    # El imputer fue ajustado sobre datos ya transformados con np.log1p().
+    # Cuando el backend/Streamlit reciba datos crudos del usuario (ej. salario
+    # real), DEBE aplicar np.log1p() a estas columnas ANTES de llamar a
+    # imputer.transform(). La función limpiar_dataset_financiero() ya incluye
+    # este paso automáticamente.
+    'columnas_log': ['MonthlyIncome', 'DebtRatio', 'RevolvingUtilizationOfUnsecuredLines'],
+    'nota_espacio_log': (
+        'IMPORTANTE: El imputer espera datos en espacio log1p. Aplicar '
+        'np.log1p() a las columnas MonthlyIncome, DebtRatio y '
+        'RevolvingUtilizationOfUnsecuredLines ANTES de llamar a '
+        'imputer.transform(). La función limpiar_dataset_financiero() '
+        'ya incluye este paso.'
+    ),
+}
+
+joblib.dump(preprocessor_artifact, 'models/preprocessor.pkl')
+print("✅ Artefacto de preprocesamiento exportado: 'models/preprocessor.pkl'")
+
+# ── GUARDAR CSVs LIMPIOS ──
+df_train_clean.to_csv('data/train_clean.csv', index=False)
+df_test_clean.to_csv('data/test_clean.csv', index=False)
+print("✅ Datos limpios guardados en 'data/train_clean.csv' y 'data/test_clean.csv'")

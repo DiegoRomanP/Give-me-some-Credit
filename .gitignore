@@ -1,15 +1,85 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# === Entornos virtuales ===
+.venv/
+venv/
+env/
+ENV/
 
-# Virtual environments
-.venv
+# === Datos (nunca subas datasets a Git) ===
 data/
+*.csv
+*.parquet
+*.h5
+*.feather
+
+# === Modelos entrenados (son outputs, no código; además pesan mucho) ===
+models/
+*.pkl
+*.joblib
+*.h5
+*.pb
+*.onnx
+
+# === Outputs generados (gráficos, submissions, logs) ===
+images/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.log
 submissions/
+*.submission.csv
+my_xgboost_submission.csv
+
+# === Python artifacts ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# === Jupyter ===
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# === IDEs y sistema ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Archivos de entorno y config local ===
+.env
+.env.*
+.python-version
+
+# === Archivos generados por comandos del sistema ===
+tree.txt
+
+# === Cachés de testing (si usas pytest en api/ o frontend) ===
+.pytest_cache/
+.coverage
+htmlcov/
+
+# === Streamlit (si frontend/app.py lo usa) ===
+.streamlit/secrets.toml
 
 give_me_some_credit.sql
 imputador_mice_financiero.joblib
