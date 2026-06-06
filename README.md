@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🏦 Give Me Some Credit
 
@@ -485,4 +485,3 @@ Este proyecto está bajo la Licencia MIT — consulta el archivo [LICENSE](LICEN
 Hecho con ❤️ por [Diego Román](https://github.com/DiegoRomanP)
 
 </div>
-]]>
