@@ -103,16 +103,7 @@ Give-Me-Some-Credit/
 │   ├── app.py                              #    Streamlit app
 │   └── requirements.txt                    #    Dependencias del frontend (Docker)
 ├── data/                                   # 📂 Datasets procesados
-│   ├── train_clean.csv                     #    Entrenamiento limpio (post-imputación)
-│   ├── test_clean.csv                      #    Test limpio
-│   └── train_pre_impute.csv                #    Train pre-imputación (para CV sin fuga)
 ├── images/                                 # 🖼️ Visualizaciones del EDA y resultados
-│   ├── datos_box_plot.png                  #    Boxplots antes de limpieza
-│   ├── datos_box_plot_after_cleaning.png   #    Boxplots después de limpieza
-│   ├── datos_histograma.png                #    Histogramas originales
-│   ├── datos_histograma_norm.png           #    Histogramas normalizados (log1p)
-│   ├── datos_histograma_plot_after_cleaning.png  # Histogramas post-limpieza
-│   └── Comparativa_curva_roc.png           #    Comparativa ROC de los 3 modelos
 ├── models/                                 # 🧠 Artefactos de ML entrenados
 │   ├── preprocessor.pkl                    #    MICE Imputer + mediana edad + config
 │   ├── xgboost_base_optimizado.json        #    XGBoost con pesos algorítmicos

@@ -20,12 +20,6 @@ models/
 *.onnx
 
 # === Outputs generados (gráficos, submissions, logs) ===
-images/
-*.png
-*.jpg
-*.jpeg
-*.pdf
-*.log
 submissions/
 *.submission.csv
 my_xgboost_submission.csv
