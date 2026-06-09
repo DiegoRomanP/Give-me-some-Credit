@@ -47,7 +47,6 @@ xgb_model = xgb.XGBClassifier(
     max_depth=4,
     learning_rate=0.05,
     random_state=42,
-    use_label_encoder=False,
     eval_metric='auc'
 )
 
@@ -103,7 +102,6 @@ def objective(trial):
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
         'eval_metric': 'auc',
         'random_state': 42,
-        'use_label_encoder': False,
         'n_jobs': -1 # Usa todos los núcleos de tu procesador
     }
     

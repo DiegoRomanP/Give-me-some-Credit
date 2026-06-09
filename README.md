@@ -49,6 +49,8 @@ Este proyecto aborda uno de los problemas más críticos de la industria financi
 | 📋 **Cumplimiento regulatorio** | SHAP proporciona explicaciones individuales para cada decisión |
 | 📊 **Optimización de cartera** | Mejor asignación de tasas de interés según nivel de riesgo |
 
+> **⚠️ Nota sobre el umbral de decisión:** El modelo seleccionado prioriza **Recall** (0.77) sobre **Precision** (0.22) en la clase de impago. Esto significa que ~78 % de los clientes marcados como "alto riesgo" son en realidad buenos pagadores (falsos positivos). Esta configuración es deliberada para minimizar pérdidas por impagos no detectados, pero en un despliegue en producción real el umbral de clasificación debe ajustarse según el **costo relativo de cada tipo de error** (falso positivo vs. falso negativo) definido por el negocio.
+
 ---
 
 ## 🏗️ Arquitectura del Sistema
@@ -471,7 +473,7 @@ Este proyecto está bajo la Licencia MIT — consulta el archivo [LICENSE](LICEN
 
 <div align="center">
 
-*Proyecto desarrollado con enfoque de Data Analytics, priorizando reproducibilidad, interpretabilidad y rigor estadístico.*
+*Proyecto desarrollado con enfoque de Machine Learning Engineering, priorizando reproducibilidad, interpretabilidad y despliegue en producción.*
 
 Hecho con ❤️ por [Diego Román](https://github.com/DiegoRomanP)
 
